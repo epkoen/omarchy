@@ -10,7 +10,8 @@ From the terminal, the same switches are `omarchy toggle <thing>`. Run `omarchy 
 
 | Toggle | Hotkey | Command |
 | ------ | ------ | ------- |
-| Night light | `Super + Ctrl + N` | `omarchy toggle nightlight` |
+| Night light panel | `Super + Ctrl + N` | `omarchy-shell nightlight.panel toggle` |
+| Toggle night light | `Super + Alt + N` | `omarchy toggle nightlight` |
 | Automatic night light | — | `omarchy toggle nightlight --schedule` |
 | Silence notifications | `Super + Ctrl + ,` | `omarchy toggle notification silencing` |
 | Stay awake (no idle lock) | `Super + Ctrl + I` | `omarchy toggle idle` |
@@ -42,9 +43,9 @@ Inactive indicators are hidden. Hover the area around them and they fade in dimm
 
 ### Night light
 
-`Super + Ctrl + N` warms the screen to 4000K, and hitting it again puts it back to 6500K. It's driven by hyprsunset, which the toggle starts for you if it isn't already running.
+`Super + Ctrl + N` opens the night light panel, where **Daylight**, **Night Light**, and **Sunset** stay in a fixed order as you switch between them. Below the mode buttons, an interactive warmth slider and numerical input field let you tune and preview your preferred color temperature (1500K–5000K). `Super + Alt + N` toggles warmth immediately without opening the panel. Both are driven by hyprsunset, which the toggle starts for you if it isn't already running.
 
-Right-click the night light indicator to open its mode panel, where **Daylight**, **Night Light**, and **Sunset** stay in a fixed order as you switch between them. Sunset mode turns night light on at sunset and off at sunrise. You can also choose **Sunset Nightlight** from _Trigger > Toggle_ or run `omarchy toggle nightlight --schedule`. Omarchy uses the representative location for your selected system timezone and follows daylight-saving changes automatically. Selecting a different timezone updates the schedule; using the regular night light toggle returns to manual control.
+Right-click the night light indicator in the top bar to also open its mode panel. Sunset mode turns night light on at sunset and off at sunrise. You can also choose **Sunset Nightlight** from _Trigger > Toggle_ or run `omarchy toggle nightlight --schedule`. Omarchy uses the representative location for your selected system timezone and follows daylight-saving changes automatically. Selecting a different timezone updates the schedule; using the regular night light toggle returns to manual control.
 
 Sunset mode rechecks the display temperature when the laptop wakes, so sleeping through sunset or sunrise does not leave the screen in the previous mode.
 

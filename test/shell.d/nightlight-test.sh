@@ -91,6 +91,13 @@ if nightlight_schedule enabled; then
 fi
 pass "solar schedule persists automatic and manual modes"
 
+[[ $(nightlight_schedule temperature) == 4000 ]] || fail "solar schedule defaults to 4000K"
+nightlight_schedule set-temperature 2500 >/dev/null
+[[ $(nightlight_schedule temperature) == 2500 ]] || fail "solar schedule persists temperature setting"
+[[ $(jq -r .temperature <<<"$(nightlight_schedule evaluate)") == 2500 ]] || fail "solar schedule evaluate reports temperature"
+pass "solar schedule persists temperature setting"
+nightlight_schedule set-temperature 4000 >/dev/null
+
 nightlight_status() {
   printf '%s\n' "$1" >"$STATE"
   nightlight_cli --status

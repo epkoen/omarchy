@@ -10,7 +10,7 @@ Item {
 
   // Keep in sync with bin/omarchy-toggle-nightlight, which sets the same
   // temperatures for callers outside the shell (keybindings, menu, ssh).
-  readonly property int nightTemperature: 4000
+  property int nightTemperature: 4000
   readonly property int dayTemperature: 6500
 
   property bool stateLoaded: false
@@ -19,6 +19,7 @@ Item {
 
   property bool scheduleLoaded: false
   property bool scheduled: false
+  property bool isNight: false
   property string scheduleTimezone: ""
   property string nextEvent: ""
   property string nextEventAt: ""
@@ -66,6 +67,8 @@ Item {
   function applySchedule(data) {
     root.scheduleLoaded = true
     root.scheduled = data.scheduled === true
+    if (data.temperature) root.nightTemperature = Number(data.temperature)
+    root.isNight = data.night === true
     root.scheduleError = data.error ? String(data.error) : ""
     root.scheduleTimezone = data.timezone ? String(data.timezone) : ""
     root.nextEvent = data.nextEvent ? String(data.nextEvent) : ""
@@ -80,13 +83,26 @@ Item {
       return
     }
 
-    var target = data.night === true ? root.nightTemperature : root.dayTemperature
+    var target = root.isNight ? root.nightTemperature : root.dayTemperature
     if (root.temperature !== target) root.applyTemperature(target)
 
     var eventTime = Date.parse(root.nextEventAt)
     var delay = isNaN(eventTime) ? 15 * 60 * 1000 : eventTime - Date.now() + 1000
     scheduleTimer.interval = Math.max(1000, Math.min(6 * 60 * 60 * 1000, delay))
     scheduleTimer.restart()
+  }
+
+  function setTemperature(temp) {
+    root.nightTemperature = Number(temp)
+    saveTempProcess.command = ["omarchy-nightlight-schedule", "set-temperature", String(temp)]
+    saveTempProcess.running = true
+    if (root.enabled || (root.scheduled && root.isNight)) {
+      root.applyTemperature(root.nightTemperature)
+    }
+  }
+
+  Process {
+    id: saveTempProcess
   }
 
   function applyTemperature(temp) {
@@ -207,6 +223,7 @@ Item {
       return JSON.stringify({
         enabled: root.enabled,
         temperature: root.temperature,
+        nightTemperature: root.nightTemperature,
         scheduled: root.scheduled,
         timezone: root.scheduleTimezone,
         nextEvent: root.nextEvent,
@@ -217,6 +234,15 @@ Item {
 
     function refresh(): void {
       root.refresh()
+    }
+
+    function setTemperature(temp: string): string {
+      root.setTemperature(Number(temp))
+      return "ok"
+    }
+
+    function temperature(): string {
+      return String(root.nightTemperature)
     }
 
     function enable(): string {

@@ -26,23 +26,43 @@ ZONEINFO_DIR = Path(os.environ.get("OMARCHY_ZONEINFO_DIR", "/usr/share/zoneinfo"
 SUN_ALTITUDE = -0.833
 
 
-def schedule_enabled() -> bool:
+def get_state() -> dict:
   try:
     state = json.loads(STATE_PATH.read_text())
-    return isinstance(state, dict) and state.get("mode") == "solar"
+    if isinstance(state, dict):
+      return state
   except (FileNotFoundError, json.JSONDecodeError, OSError):
-    return False
+    pass
+  return {"mode": "manual", "temperature": 4000}
 
 
-def set_schedule_enabled(enabled: bool) -> None:
+def save_state(updates: dict) -> None:
   STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-  contents = json.dumps({"mode": "solar" if enabled else "manual"}) + "\n"
+  current = get_state()
+  current.update(updates)
+  contents = json.dumps(current, indent=2) + "\n"
   with tempfile.NamedTemporaryFile(
     mode="w", dir=STATE_PATH.parent, delete=False
   ) as state_file:
     state_file.write(contents)
     temporary_path = Path(state_file.name)
   temporary_path.replace(STATE_PATH)
+
+
+def schedule_enabled() -> bool:
+  return get_state().get("mode") == "solar"
+
+
+def set_schedule_enabled(enabled: bool) -> None:
+  save_state({"mode": "solar" if enabled else "manual"})
+
+
+def get_temperature() -> int:
+  return int(get_state().get("temperature", 4000))
+
+
+def set_temperature(temp: int) -> None:
+  save_state({"temperature": int(temp)})
 
 
 def selected_timezone() -> str:
@@ -266,6 +286,7 @@ def evaluate(at: str | None = None) -> dict:
 
   return {
     "scheduled": schedule_enabled(),
+    "temperature": get_temperature(),
     "timezone": timezone_name,
     "latitude": round(latitude, 6),
     "longitude": round(longitude, 6),
@@ -277,9 +298,22 @@ def evaluate(at: str | None = None) -> dict:
 
 def main() -> int:
   parser = argparse.ArgumentParser()
-  parser.add_argument("command", choices=("enable", "disable", "toggle", "enabled", "evaluate"))
+  parser.add_argument("command", choices=("enable", "disable", "toggle", "enabled", "evaluate", "temperature", "set-temperature"))
+  parser.add_argument("value", nargs="?", type=int)
   parser.add_argument("--at")
   args = parser.parse_args()
+
+  if args.command == "temperature":
+    print(get_temperature())
+    return 0
+  if args.command == "set-temperature":
+    if args.value is not None:
+      set_temperature(args.value)
+      print(get_temperature())
+      return 0
+    else:
+      print("Error: temperature value required", file=sys.stderr)
+      return 1
 
   if args.command == "enabled":
     return 0 if schedule_enabled() else 1
