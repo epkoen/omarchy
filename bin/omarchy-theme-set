@@ -135,7 +135,7 @@ choose_theme_background() {
     if (( index == -1 )) && [[ -n $current_background ]]; then
       local current_stem="${current_background%.*}"
       for i in "${!backgrounds[@]}"; do
-        if [[ ${backgrounds[$i]%.*} == $current_stem ]]; then
+        if [[ ${backgrounds[$i]%.*} == "$current_stem" ]]; then
           index=$i
           break
         fi
